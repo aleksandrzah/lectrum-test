@@ -3,11 +3,12 @@ import "./styles";
 import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
 import Paper from "@material-ui/core/Paper";
+import { withRouter } from "react-router-dom";
 import { validate, getEmailException, getNameException } from '../instruments';
 import { Errors } from '../components/errors';
-import { getActionResource } from "../REST/config";
+import { login } from "../REST/api";
 
-export class Login extends React.Component {
+class LoginComponent extends React.Component {
   state = {
     email: "",
     password: "",
@@ -28,28 +29,10 @@ export class Login extends React.Component {
     this.setState({ password: currentTarget.value });
 
   login = async () => {
-    return fetch(getActionResource('user', 'login'), {
-      method: 'POST',
-      mode: "cors",
-      cache: "no-cache",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-      },
-      redirect: "follow",
-      referrer: "no-referrer",
-      body: JSON.stringify({
-        email: this.state.email,
-        password: this.state.password,
-      }),
-    })
-        .then(response => {
-          if (response.ok && response.status === 200) return response.json();
-
-          throw new Error('api exception');
-        })
-        .then(user => console.log('redirect'))
-        .catch(err => this.setState({ apiExceptions: [err.message] }));
+    if (this.getExceptions().length === 0) {
+      await login(this.state);
+      this.props.history.push({ pathname: '/' });
+    }
   }
 
   handleClickLogin = async () => {
@@ -61,7 +44,7 @@ export class Login extends React.Component {
         ),
         passwordExceptions: validate([getNameException], password)
       }),
-      () => this.getExceptions().length === 0 && this.login()
+      this.login,
     );
   };
 
@@ -108,3 +91,5 @@ export class Login extends React.Component {
     );
   }
 }
+
+export const Login = withRouter(LoginComponent);

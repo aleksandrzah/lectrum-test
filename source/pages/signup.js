@@ -5,7 +5,7 @@ import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import { getEmailException, getNameException, validate } from "../instruments";
 import { Errors } from '../components/errors';
-import { getResource, TOKEN } from '../REST/config';
+import {createUser} from '../REST/api';
 
 export class Signup extends React.Component {
   state = {
@@ -39,31 +39,11 @@ export class Signup extends React.Component {
   handleChangeLastName = ({ currentTarget }) =>
       this.setState({ lastName: currentTarget.value });
 
-  createUser = async () => {
-    return fetch(getResource('user'), {
-      method: 'POST',
-      mode: "cors",
-      cache: "no-cache",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-      },
-      redirect: "follow",
-      referrer: "no-referrer",
-      body: JSON.stringify({
-        firstName: this.state.firstName,
-        lastName: this.state.lastName,
-        email: this.state.email,
-        password: this.state.password,
-        invite: TOKEN,
-      }),
-    })
-        .then(response => {
-          if (response.ok) return console.log('redirect');
-
-          this.setState({ apiExceptions: ['Api exception'] })
-        })
-        .catch(err => this.setState({ apiExceptions: [err.message] }));
+  signup = async () => {
+    if (this.getExceptions().length === 0) {
+      await createUser(this.state);
+      this.props.history.push({ pathname: '/' });
+    }
   }
 
   handleClickSignup = async () => {
@@ -77,7 +57,7 @@ export class Signup extends React.Component {
           ),
           passwordExceptions: validate([getNameException], password)
         }),
-        () => this.getExceptions().length === 0 && this.createUser(),
+        this.signup
     );
   };
 
